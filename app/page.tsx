@@ -1,102 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { featuredItems, recentTransactions } from './data/marketData';
 
 export default function Home() {
-  // Datos ficticios para los objetos destacados del mercado
-  const featuredItems = [
-    {
-      id: 1,
-      name: "Camiseta España 2026",
-      category: "Ropa Hombre (Legal)",
-      referencePrice: "850.000 $",
-      median30d: "820.000 $",
-      variation: "+6.4%",
-      isPositive: true,
-      confidence: "Alta",
-      confidenceColor: "bg-[#22C55E]",
-      activeListings: 4,
-      image: "👕"
-    },
-    {
-      id: 2,
-      name: "Chaqueta Racing Oficial",
-      category: "Ropa Hombre (Legal)",
-      referencePrice: "1.250.000 $",
-      median30d: "1.200.000 $",
-      variation: "+2.1%",
-      isPositive: true,
-      confidence: "Media",
-      confidenceColor: "bg-[#3B82F6]",
-      activeListings: 2,
-      image: "🧥"
-    },
-    {
-      id: 3,
-      name: "Reloj Luxury Gold",
-      category: "Objetos (Legal)",
-      referencePrice: "3.500.000 $",
-      median30d: "3.700.000 $",
-      variation: "-5.4%",
-      isPositive: false,
-      confidence: "Alta",
-      confidenceColor: "bg-[#22C55E]",
-      activeListings: 6,
-      image: "⌚"
-    },
-    {
-      id: 4,
-      name: "Bolsa de Viaje Premium",
-      category: "Objetos (Legal)",
-      referencePrice: "450.000 $",
-      median30d: "450.000 $",
-      variation: "0.0%",
-      isPositive: true,
-      confidence: "Limitada",
-      confidenceColor: "bg-[#F59E0B]",
-      activeListings: 1,
-      image: "🎒"
-    }
-  ];
-
-  // Datos ficticios para las últimas operaciones completadas
-  const recentTransactions = [
-    {
-      id: 1,
-      item: "Camiseta España 2026",
-      price: "850.000 $",
-      buyer: "Carlos_99",
-      seller: "Juan_G",
-      time: "Hace 2 horas",
-      status: "COMPLETADA"
-    },
-    {
-      id: 2,
-      item: "Reloj Luxury Gold",
-      price: "3.600.000 $",
-      buyer: "AlexRP",
-      seller: "Lucia_V",
-      time: "Hace 5 horas",
-      status: "COMPLETADA"
-    },
-    {
-      id: 3,
-      item: "Chaqueta Racing Oficial",
-      price: "1.200.000 $",
-      buyer: "Marcos_K",
-      seller: "Toni_M",
-      time: "Hace 1 día",
-      status: "COMPLETADA"
-    },
-    {
-      id: 4,
-      item: "Bolsa de Viaje Premium",
-      price: "450.000 $",
-      buyer: "Sara_Dev",
-      seller: "Pedro_99",
-      time: "Hace 2 días",
-      status: "COMPLETADA"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-[#09090B] text-[#F4F4F5] font-sans selection:bg-[#8B5CF6] selection:text-white pb-20 md:pb-0">
       {/* HEADER */}
@@ -118,6 +25,10 @@ export default function Home() {
             <div className="hidden sm:block text-xs px-2.5 py-1 rounded-full bg-[#18181B] border border-[#27272A] text-[#A1A1AA]">
               Fase de Prototipo <span className="text-[#22C55E]">●</span>
             </div>
+            {/* BOTÓN DE PUBLICAR */}
+            <Link href="/publicar" className="text-sm font-medium px-4 py-2 rounded-lg bg-[#22C55E] hover:bg-[#1ea34d] transition-all text-black font-semibold shadow-lg shadow-[#22C55E]/20">
+              + Publicar
+            </Link>
             <Link href="#" className="text-sm font-medium px-4 py-2 rounded-lg bg-[#18181B] border border-[#27272A] hover:border-[#8B5CF6] transition-all text-white">
               Mi Perfil
             </Link>
@@ -160,7 +71,7 @@ export default function Home() {
               <span>Búsquedas populares:</span>
               <span className="text-white hover:underline cursor-pointer">Camiseta España</span>
               <span>•</span>
-              <span className="text-white hover:underline cursor-pointer">Chaqueta Racing</span>
+              <span className="text-white hover:underline cursor-pointer">Hubpods</span>
               <span>•</span>
               <span className="text-white hover:underline cursor-pointer">Reloj Luxury</span>
             </div>
@@ -186,7 +97,7 @@ export default function Home() {
             <p className="text-xs text-[#A1A1AA] mb-4">Mercado de bienes, comercios y propiedades bajo el marco legal del servidor.</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {['Ropa Hombre', 'Ropa Mujer', 'Objetos', 'Empresas', 'Propiedades', 'Buscando'].map((sub, idx) => (
+              {['Ropa Hombre', 'Tecnología', 'Objetos', 'Empresas', 'Propiedades', 'Buscando'].map((sub, idx) => (
                 <div key={idx} className="bg-[#111113] border border-[#27272A] hover:border-[#22C55E]/40 p-3 rounded-lg transition-all cursor-pointer group">
                   <span className="text-xs font-medium text-white group-hover:text-[#22C55E] transition-colors block">{sub}</span>
                   <span className="text-[10px] text-[#A1A1AA] mt-0.5 block">Ver anuncios</span>
@@ -233,14 +144,20 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {featuredItems.map((item) => (
-            <div key={item.id} className="bg-[#18181B] border border-[#27272A] hover:border-[#27272A]/80 rounded-xl p-5 flex flex-col justify-between transition-all hover:shadow-xl group">
+            <Link 
+              key={item.id} 
+              href={`/objetos/${item.id}`}
+              className="bg-[#18181B] border border-[#27272A] hover:border-[#8B5CF6] rounded-xl p-5 flex flex-col justify-between transition-all hover:shadow-xl group block"
+            >
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-3xl p-2 rounded-lg bg-[#111113] border border-[#27272A]">{item.image}</span>
-                  <div className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-[#111113] border border-[#27272A] text-[#A1A1AA]">
-                    <span className={`w-2 h-2 rounded-full ${item.confidenceColor}`}></span>
-                    Confianza {item.confidence}
-                  </div>
+                <div className="mb-4">
+                  {item.image.startsWith('/') ? (
+                    <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-[#111113] border border-[#27272A] flex items-center justify-center">
+                      <img src={item.image} alt={item.name} className="object-cover w-full h-full" />
+                    </div>
+                  ) : (
+                    <span className="text-3xl p-2 rounded-lg bg-[#111113] border border-[#27272A] inline-block">{item.image}</span>
+                  )}
                 </div>
 
                 <span className="text-xs text-[#22C55E] font-medium">{item.category}</span>
@@ -266,11 +183,11 @@ export default function Home() {
 
               <div className="mt-6 pt-4 border-t border-[#27272A] flex items-center justify-between">
                 <span className="text-xs text-[#A1A1AA]">{item.activeListings} anuncios activos</span>
-                <button className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#111113] border border-[#27272A] text-white hover:border-[#8B5CF6] transition-all">
-                  Ver mercado
-                </button>
+                <span className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#111113] border border-[#27272A] text-white group-hover:border-[#8B5CF6] transition-all">
+                  Ver mercado →
+                </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -293,7 +210,7 @@ export default function Home() {
                     🤝
                   </div>
                   <div>
-                    <h4 className="text-white font-medium text-sm">{tx.item}</h4>
+                    <h4 className="text-white font-medium text-sm">{tx.itemName}</h4>
                     <p className="text-xs text-[#A1A1AA] mt-0.5">
                       Vendedor: <span className="text-white">@{tx.seller}</span> • Comprador: <span className="text-white">@{tx.buyer}</span>
                     </p>

@@ -1,13 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { featuredItems, recentTransactions } from '../../data/marketData';
 
-export default function ItemDetailPage() {
-  const [viewType, setViewType] = useState('Semanal'); // Mensual o Semanal
-  const [subOption, setSubOption] = useState('Jueves'); // Subcategoría activa
-  const [isImageOpen, setIsImageOpen] = useState(false); // Estado para ampliar la imagen
+export default function ItemDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const resolvedParams = use(params);
+  const itemId = parseInt(resolvedParams.slug);
+  
+  const foundItem = featuredItems.find((i) => i.id === itemId);
+
+  const [viewType, setViewType] = useState('Semanal'); 
+  const [subOption, setSubOption] = useState('Jueves'); 
+  const [isImageOpen, setIsImageOpen] = useState(false); 
   
   const [hoveredPoint, setHoveredPoint] = useState<{
     time: string;
@@ -15,101 +20,116 @@ export default function ItemDetailPage() {
     price: string;
     x: number;
     y: number;
-  } | null>({
-    time: "14:00",
-    date: "Jueves, 24 de septiembre de 2026",
-    price: "850.000 $",
-    x: 240,
-    y: 25
-  });
+  } | null>(null);
+
+  if (!foundItem) {
+    return (
+      <div className="min-h-screen bg-[#09090B] text-[#F4F4F5] flex flex-col items-center justify-center p-6 font-sans">
+        <h1 className="text-2xl font-bold text-white mb-2">Ítem no encontrado</h1>
+        <p className="text-xs text-[#A1A1AA] mb-6">El objeto que buscas no existe en el registro del mercado.</p>
+        <Link href="/" className="px-4 py-2 rounded-lg bg-[#8B5CF6] text-white text-sm font-medium">
+          ← Volver al inicio
+        </Link>
+      </div>
+    );
+  }
 
   const item = {
-    name: "Camiseta de España 2026 (Local)",
-    category: "Ropa Hombre (Legal)",
-    referencePrice: "850.000 $",
-    median7d: "840.000 $",
-    median30d: "820.000 $",
-    median90d: "790.000 $",
-    minPrice: "650.000 $",
-    maxPrice: "1.100.000 $",
+    name: foundItem.name,
+    category: foundItem.category,
+    referencePrice: foundItem.referencePrice,
+    median7d: foundItem.median30d,
+    median30d: foundItem.median30d,
+    median90d: foundItem.referencePrice,
+    minPrice: "600.000 $",
+    maxPrice: "6.500.000 $",
     lastOperation: "Hace 2 días",
-    totalOperations: 18,
-    confidence: "Alta",
-    confidenceColor: "bg-[#22C55E]",
-    imagePath: "/camiseta-espana.png"
+    totalOperations: foundItem.activeListings * 5,
+    image: foundItem.image
   };
 
-  const dataByDay: Record<string, { time: string; date: string; price: string; x: number; y: number }[]> = {
+  const calculateY = (priceStr: string) => {
+    const numericPrice = parseInt(priceStr.replace(/[^0-9]/g, '')) || 800000;
+    const minVal = 500000; 
+    const maxVal = 7000000; 
+    const clamped = Math.max(minVal, Math.min(maxVal, numericPrice));
+    const percentage = (clamped - minVal) / (maxVal - minVal);
+    return 85 - (percentage * 70);
+  };
+
+  const rawDataByDay: Record<string, { time: string; date: string; price: string; x: number }[]> = {
     "Lunes": [
-      { time: "08:00", date: "Lunes, 21 de septiembre de 2026", price: "700.000 $", x: 50, y: 80 },
-      { time: "14:00", date: "Lunes, 21 de septiembre de 2026", price: "720.000 $", x: 200, y: 70 },
-      { time: "20:00", date: "Lunes, 21 de septiembre de 2026", price: "710.000 $", x: 350, y: 75 }
+      { time: "08:00", date: "Lunes, 21 de septiembre de 2026", price: item.referencePrice, x: 50 },
+      { time: "14:00", date: "Lunes, 21 de septiembre de 2026", price: item.referencePrice, x: 200 },
+      { time: "20:00", date: "Lunes, 21 de septiembre de 2026", price: item.referencePrice, x: 350 }
     ],
     "Martes": [
-      { time: "08:00", date: "Martes, 22 de septiembre de 2026", price: "730.000 $", x: 50, y: 65 },
-      { time: "14:00", date: "Martes, 22 de septiembre de 2026", price: "760.000 $", x: 200, y: 55 },
-      { time: "20:00", date: "Martes, 22 de septiembre de 2026", price: "790.000 $", x: 350, y: 45 }
+      { time: "08:00", date: "Martes, 22 de septiembre de 2026", price: item.referencePrice, x: 50 },
+      { time: "14:00", date: "Martes, 22 de septiembre de 2026", price: item.referencePrice, x: 200 },
+      { time: "20:00", date: "Martes, 22 de septiembre de 2026", price: item.referencePrice, x: 350 }
     ],
     "Miércoles": [
-      { time: "08:00", date: "Miércoles, 23 de septiembre de 2026", price: "800.000 $", x: 50, y: 40 },
-      { time: "14:00", date: "Miércoles, 23 de septiembre de 2026", price: "820.000 $", x: 200, y: 35 },
-      { time: "20:00", date: "Miércoles, 23 de septiembre de 2026", price: "830.000 $", x: 350, y: 30 }
+      { time: "08:00", date: "Miércoles, 23 de septiembre de 2026", price: item.referencePrice, x: 50 },
+      { time: "14:00", date: "Miércoles, 23 de septiembre de 2026", price: item.referencePrice, x: 200 },
+      { time: "20:00", date: "Miércoles, 23 de septiembre de 2026", price: item.referencePrice, x: 350 }
     ],
     "Jueves": [
-      { time: "02:00", date: "Jueves, 24 de septiembre de 2026", price: "740.000 $", x: 20, y: 70 },
-      { time: "08:00", date: "Jueves, 24 de septiembre de 2026", price: "810.000 $", x: 130, y: 50 },
-      { time: "14:00", date: "Jueves, 24 de septiembre de 2026", price: "890.000 $", x: 240, y: 25 },
-      { time: "20:00", date: "Jueves, 24 de septiembre de 2026", price: "850.000 $", x: 350, y: 28 }
+      { time: "02:00", date: "Jueves, 24 de septiembre de 2026", price: item.referencePrice, x: 20 },
+      { time: "08:00", date: "Jueves, 24 de septiembre de 2026", price: item.referencePrice, x: 130 },
+      { time: "14:00", date: "Jueves, 24 de septiembre de 2026", price: item.referencePrice, x: 240 },
+      { time: "20:00", date: "Jueves, 24 de septiembre de 2026", price: item.referencePrice, x: 350 }
     ],
     "Viernes": [],
     "Sábado": [],
     "Domingo": []
   };
 
-  const dataByZoom: Record<string, { time: string; date: string; price: string; x: number; y: number }[]> = {
+  const rawDataByZoom: Record<string, { time: string; date: string; price: string; x: number }[]> = {
     "1m": [
-      { time: "Sem 1", date: "1 - 7 Septiembre, 2026", price: "780.000 $", x: 50, y: 65 },
-      { time: "Sem 2", date: "8 - 14 Septiembre, 2026", price: "800.000 $", x: 150, y: 55 },
-      { time: "Sem 3", date: "15 - 21 Septiembre, 2026", price: "820.000 $", x: 250, y: 40 },
-      { time: "Sem 4", date: "22 - 28 Septiembre, 2026", price: "850.000 $", x: 350, y: 25 }
+      { time: "Sem 1", date: "1 - 7 Septiembre, 2026", price: item.referencePrice, x: 50 },
+      { time: "Sem 2", date: "8 - 14 Septiembre, 2026", price: item.referencePrice, x: 150 },
+      { time: "Sem 3", date: "15 - 21 Septiembre, 2026", price: item.referencePrice, x: 250 },
+      { time: "Sem 4", date: "22 - 28 Septiembre, 2026", price: item.referencePrice, x: 350 }
     ],
     "3m": [
-      { time: "Julio", date: "Mes de Julio, 2026", price: "750.000 $", x: 60, y: 70 },
-      { time: "Agosto", date: "Mes de Agosto, 2026", price: "790.000 $", x: 200, y: 50 },
-      { time: "Septiembre", date: "Septiembre, 2026", price: "850.000 $", x: 340, y: 25 }
+      { time: "Julio", date: "Mes de Julio, 2026", price: item.referencePrice, x: 60 },
+      { time: "Agosto", date: "Mes de Agosto, 2026", price: item.referencePrice, x: 200 },
+      { time: "Septiembre", date: "Septiembre, 2026", price: item.referencePrice, x: 340 }
     ],
     "6m": [
-      { time: "Abril", date: "Mes de Abril, 2026", price: "680.000 $", x: 40, y: 85 },
-      { time: "Mayo", date: "Mes de Mayo, 2026", price: "710.000 $", x: 100, y: 75 },
-      { time: "Junio", date: "Mes de Junio, 2026", price: "740.000 $", x: 160, y: 65 },
-      { time: "Julio", date: "Mes de Julio, 2026", price: "750.000 $", x: 220, y: 70 },
-      { time: "Agosto", date: "Mes de Agosto, 2026", price: "790.000 $", x: 280, y: 50 },
-      { time: "Septiembre", date: "Septiembre, 2026", price: "850.000 $", x: 340, y: 25 }
+      { time: "Abril", date: "Mes de Abril, 2026", price: item.referencePrice, x: 40 },
+      { time: "Mayo", date: "Mes de Mayo, 2026", price: item.referencePrice, x: 100 },
+      { time: "Junio", date: "Mes de Junio, 2026", price: item.referencePrice, x: 160 },
+      { time: "Julio", date: "Mes de Julio, 2026", price: item.referencePrice, x: 220 },
+      { time: "Agosto", date: "Mes de Agosto, 2026", price: item.referencePrice, x: 280 },
+      { time: "Septiembre", date: "Septiembre, 2026", price: item.referencePrice, x: 340 }
     ],
     "Todo": [
-      { time: "2024", date: "Año 2024", price: "500.000 $", x: 50, y: 95 },
-      { time: "2025", date: "Año 2025", price: "650.000 $", x: 200, y: 70 },
-      { time: "2026", date: "Año 2026 (Actual)", price: "850.000 $", x: 350, y: 25 }
+      { time: "2024", date: "Año 2024", price: item.referencePrice, x: 50 },
+      { time: "2025", date: "Año 2025", price: item.referencePrice, x: 200 },
+      { time: "2026", date: "Año 2026 (Actual)", price: item.referencePrice, x: 350 }
     ]
   };
 
+  const mapWithY = (list: { time: string; date: string; price: string; x: number }[]) =>
+    list.map(pt => ({ ...pt, y: calculateY(pt.price) }));
+
   const currentPoints = viewType === 'Mensual' 
-    ? (dataByZoom[subOption] || [])
-    : (dataByDay[subOption] || []);
+    ? mapWithY(rawDataByZoom[subOption] || [])
+    : mapWithY(rawDataByDay[subOption] || []);
 
   const svgPathString = currentPoints.length > 0 
     ? currentPoints.reduce((acc, pt, idx) => (idx === 0 ? `M ${pt.x},${pt.y}` : `${acc} L ${pt.x},${pt.y}`), "")
     : "";
 
+  // Anuncios con valoración de estrellas
   const activeSellListings = [
-    { id: 1, seller: "Carlos_99", rating: "4.9", operations: 24, price: "900.000 $", stock: 1, time: "Hace 3 horas" },
-    { id: 2, seller: "Juan_G", rating: "4.7", operations: 12, price: "850.000 $", stock: 2, time: "Hace 5 horas" },
-    { id: 3, seller: "AlexRP", rating: "5.0", operations: 45, price: "920.000 $", stock: 1, time: "Hace 1 día" }
+    { id: 1, seller: "Carlos_99", rating: "4.9", operations: 24, price: item.referencePrice, stock: 1, time: "Hace 3 horas" },
+    { id: 2, seller: "Juan_G", rating: "4.7", operations: 12, price: item.referencePrice, stock: 2, time: "Hace 5 horas" }
   ];
 
   const activeBuyListings = [
-    { id: 1, buyer: "Lucia_V", rating: "4.8", operations: 9, budget: "850.000 $", time: "Hace 1 hora" },
-    { id: 2, buyer: "Toni_M", rating: "4.6", operations: 5, budget: "800.000 $", time: "Hace 4 horas" }
+    { id: 1, buyer: "Lucia_V", rating: "4.8", operations: 9, budget: item.referencePrice, time: "Hace 1 hora" }
   ];
 
   return (
@@ -131,35 +151,32 @@ export default function ItemDetailPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* CABECERA Y PRECIO DE REFERENCIA */}
+        {/* CABECERA */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="bg-[#18181B] border border-[#27272A] rounded-2xl p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div 
-                  onClick={() => setIsImageOpen(true)}
-                  className="w-24 h-24 relative bg-[#111113] border border-[#27272A] rounded-xl flex items-center justify-center overflow-hidden p-2 cursor-pointer group hover:border-[#8B5CF6] transition-all"
-                  title="Haz clic para ampliar la imagen"
+                  onClick={() => item.image.startsWith('/') && setIsImageOpen(true)}
+                  className={`w-24 h-24 relative bg-[#111113] border border-[#27272A] rounded-xl flex items-center justify-center overflow-hidden p-2 shadow-inner ${
+                    item.image.startsWith('/') ? 'cursor-pointer group hover:border-[#8B5CF6] transition-all' : ''
+                  }`}
+                  title={item.image.startsWith('/') ? "Haz clic para ampliar la imagen" : ""}
                 >
-                  <Image 
-                    src={item.imagePath} 
-                    alt={item.name} 
-                    fill 
-                    className="object-contain drop-shadow-md group-hover:scale-110 transition-transform"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white font-medium">
-                    🔍 Ampliar
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-[#111113] border border-[#27272A] text-[#A1A1AA]">
-                  <span className={`w-2 h-2 rounded-full ${item.confidenceColor}`}></span>
-                  Confianza {item.confidence}
+                  {item.image.startsWith('/') ? (
+                    <>
+                      <img src={item.image} alt={item.name} className="object-cover w-full h-full group-hover:scale-110 transition-transform" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-[10px] text-white font-medium">
+                        🔍 Ampliar
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-4xl">{item.image}</span>
+                  )}
                 </div>
               </div>
               <span className="text-xs text-[#22C55E] font-medium">{item.category}</span>
               <h1 className="text-2xl font-bold text-white mt-1">{item.name}</h1>
-              <p className="text-xs text-[#A1A1AA] mt-2">Nombre canónico normalizado. Agrupa todas las variantes de búsqueda del mercado.</p>
             </div>
             <div className="mt-6 pt-4 border-t border-[#27272A] flex items-center justify-between">
               <span className="text-xs text-[#A1A1AA]">Operaciones totales</span>
@@ -200,13 +217,13 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        {/* MODAL / LIGHTBOX PARA AMPLIAR IMAGEN */}
-        {isImageOpen && (
+        {/* MODAL PARA AMPLIAR IMAGEN */}
+        {isImageOpen && item.image.startsWith('/') && (
           <div 
             onClick={() => setIsImageOpen(false)}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
           >
-            <div className="relative bg-[#18181B] border border-[#27272A] rounded-2xl p-6 max-w-lg w-full flex flex-col items-center shadow-2xl">
+            <div className="relative bg-[#18181B] border border-[#27272A] rounded-2xl p-6 max-w-lg w-full flex flex-col items-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <button 
                 onClick={() => setIsImageOpen(false)}
                 className="absolute top-4 right-4 text-[#A1A1AA] hover:text-white bg-[#111113] border border-[#27272A] w-8 h-8 rounded-full flex items-center justify-center transition-colors"
@@ -214,20 +231,15 @@ export default function ItemDetailPage() {
                 ✕
               </button>
               <h3 className="text-white font-bold text-base mb-4">{item.name}</h3>
-              <div className="w-72 h-72 relative bg-[#111113] border border-[#27272A] rounded-xl overflow-hidden p-4">
-                <Image 
-                  src={item.imagePath} 
-                  alt={item.name} 
-                  fill 
-                  className="object-contain drop-shadow-lg"
-                />
+              <div className="w-72 h-72 relative bg-[#111113] border border-[#27272A] rounded-xl overflow-hidden p-4 flex items-center justify-center">
+                <img src={item.image} alt={item.name} className="object-contain w-full h-full drop-shadow-lg" />
               </div>
-              <p className="text-xs text-[#A1A1AA] mt-4">Haz clic en cualquier parte fuera de la ventana para cerrar.</p>
+              <p className="text-xs text-[#A1A1AA] mt-4">Haz clic fuera de la ventana para cerrar.</p>
             </div>
           </div>
         )}
 
-        {/* GRÁFICA TIPO FINANCIERO */}
+        {/* GRÁFICA */}
         <div className="bg-[#18181B] border border-[#27272A] rounded-2xl p-6 space-y-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#27272A] pb-4">
             <div className="flex items-center gap-3">
@@ -295,18 +307,17 @@ export default function ItemDetailPage() {
 
           <div className="relative h-72 w-full pt-4">
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[11px] text-[#A1A1AA] pb-8">
-              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>900K $</span></div>
-              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>850K $</span></div>
-              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>800K $</span></div>
-              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>750K $</span></div>
-              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>700K $</span></div>
+              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>Máximo</span></div>
+              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>Alto</span></div>
+              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>Medio</span></div>
+              <div className="flex justify-between items-center border-b border-[#27272A]/60 pb-1"><span>Base</span></div>
             </div>
 
             <div className="absolute inset-0 pl-12 pr-4 pb-8 pt-2 flex items-center justify-center">
               {currentPoints.length === 0 ? (
                 <div className="text-center space-y-2 z-20">
                   <span className="text-2xl">⏳</span>
-                  <p className="text-xs text-[#A1A1AA] font-medium">Sin datos ni operaciones registradas para este periodo (Fecha futura).</p>
+                  <p className="text-xs text-[#A1A1AA] font-medium">Sin datos ni operaciones registradas para este periodo.</p>
                 </div>
               ) : (
                 <svg viewBox="0 0 380 100" preserveAspectRatio="none" className="w-full h-full overflow-visible">
@@ -370,7 +381,7 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        {/* VENDEDORES Y COMPRADORES */}
+        {/* VENDEDORES Y COMPRADORES CON VALORACIÓN DE ESTRELLAS ⭐ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
@@ -382,8 +393,9 @@ export default function ItemDetailPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm">@{listing.seller}</span>
-                      <span className="text-[10px] bg-[#111113] border border-[#27272A] px-2 py-0.5 rounded text-[#A1A1AA]">
-                        ⭐ {listing.rating} ({listing.operations} op.)
+                      {/* Reputación por estrellas */}
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-[#111113] border border-[#27272A] text-yellow-400 font-medium flex items-center gap-1">
+                        ⭐ {listing.rating} <span className="text-[#A1A1AA] text-[10px]">({listing.operations} op.)</span>
                       </span>
                     </div>
                     <p className="text-xs text-[#A1A1AA] mt-1">Cantidad: {listing.stock} ud. • Publicado {listing.time}</p>
@@ -412,8 +424,9 @@ export default function ItemDetailPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-white font-semibold text-sm">@{buying.buyer}</span>
-                      <span className="text-[10px] bg-[#111113] border border-[#27272A] px-2 py-0.5 rounded text-[#A1A1AA]">
-                        ⭐ {buying.rating} ({buying.operations} op.)
+                      {/* Reputación por estrellas */}
+                      <span className="text-xs px-2 py-0.5 rounded-md bg-[#111113] border border-[#27272A] text-yellow-400 font-medium flex items-center gap-1">
+                        ⭐ {buying.rating} <span className="text-[#A1A1AA] text-[10px]">({buying.operations} op.)</span>
                       </span>
                     </div>
                     <p className="text-xs text-[#A1A1AA] mt-1">Busca este objeto • {buying.time}</p>
